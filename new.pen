@@ -221,7 +221,8 @@
                   "content": "Seasonal staples, ready to cook.",
                   "lineHeight": 1.35,
                   "fontFamily": "Geist",
-                  "fontSize": 14
+                  "fontSize": 14,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -5904,6 +5905,416 @@
                   "fontFamily": "Newsreader",
                   "fontSize": 13,
                   "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "VsJR3",
+      "x": 457,
+      "y": 0,
+      "name": "Login",
+      "clip": true,
+      "width": 393,
+      "height": 852,
+      "fill": "$surface-primary",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "bH4oZ",
+          "name": "statusBar",
+          "width": "fill_container",
+          "height": 62,
+          "padding": [
+            0,
+            20
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "BMCen",
+              "name": "time",
+              "fill": "$foreground-primary",
+              "content": "9:41",
+              "fontFamily": "Inter",
+              "fontSize": 16,
+              "fontWeight": "600"
+            },
+            {
+              "type": "frame",
+              "id": "c6APf",
+              "name": "statusIcons",
+              "gap": 6,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "6SAy2",
+                  "name": "signal",
+                  "width": 16,
+                  "height": 16,
+                  "iconFontName": "signal",
+                  "iconFontFamily": "lucide",
+                  "fill": "$foreground-primary"
+                },
+                {
+                  "type": "icon_font",
+                  "id": "M5oOc",
+                  "name": "wifi",
+                  "width": 16,
+                  "height": 16,
+                  "iconFontName": "wifi",
+                  "iconFontFamily": "lucide",
+                  "fill": "$foreground-primary"
+                },
+                {
+                  "type": "icon_font",
+                  "id": "JG1zA",
+                  "name": "battery",
+                  "width": 16,
+                  "height": 16,
+                  "iconFontName": "battery-full",
+                  "iconFontFamily": "lucide",
+                  "fill": "$foreground-primary"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "u46gW",
+          "name": "content",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "gap": 32,
+          "padding": [
+            40,
+            24
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "MetQe",
+              "name": "logoSection",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 14,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "xBjma",
+                  "name": "logoBox",
+                  "width": 72,
+                  "height": 72,
+                  "fill": "$accent-primary",
+                  "cornerRadius": "$rounded-xl",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "rSdmj",
+                      "name": "logoIcon",
+                      "width": 36,
+                      "height": 36,
+                      "iconFontName": "refrigerator",
+                      "iconFontFamily": "lucide",
+                      "fill": "$foreground-inverse"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "aBhPy",
+                  "name": "appName",
+                  "fill": "$foreground-primary",
+                  "content": "Dispens",
+                  "fontFamily": "Inter",
+                  "fontSize": 32,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "dS06g",
+                  "name": "tagline",
+                  "fill": "$foreground-muted",
+                  "textGrowth": "fixed-width",
+                  "width": 280,
+                  "content": "Your household food inventory manager",
+                  "textAlign": "center",
+                  "fontFamily": "Newsreader",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Jlo5F",
+              "name": "formSection",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 12,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "y9Tfi",
+                  "name": "emailCard",
+                  "width": "fill_container",
+                  "fill": "$surface-secondary",
+                  "cornerRadius": "$rounded-2xl",
+                  "layout": "vertical",
+                  "gap": 10,
+                  "padding": 16,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "Y8MY5",
+                      "name": "emailLabel",
+                      "fill": "$foreground-primary",
+                      "content": "Email",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "wXTpO",
+                      "name": "emailInput",
+                      "width": "fill_container",
+                      "height": 44,
+                      "fill": "$surface-input",
+                      "cornerRadius": "$rounded-lg",
+                      "stroke": {
+                        "align": "center",
+                        "thickness": 1,
+                        "fill": "$input-border"
+                      },
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "CIO4q",
+                          "name": "emailPlaceholder",
+                          "fill": "$foreground-placeholder",
+                          "content": "Enter your email",
+                          "fontFamily": "Inter",
+                          "fontSize": 15,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "23b3r",
+                  "name": "pwCard",
+                  "width": "fill_container",
+                  "fill": "$surface-secondary",
+                  "cornerRadius": "$rounded-2xl",
+                  "layout": "vertical",
+                  "gap": 10,
+                  "padding": 16,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "xjyIa",
+                      "name": "pwLabel",
+                      "fill": "$foreground-primary",
+                      "content": "Password",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Z5CxC",
+                      "name": "pwInput",
+                      "width": "fill_container",
+                      "height": 44,
+                      "fill": "$surface-input",
+                      "cornerRadius": "$rounded-lg",
+                      "stroke": {
+                        "align": "center",
+                        "thickness": 1,
+                        "fill": "$input-border"
+                      },
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "XWakW",
+                          "name": "pwPlaceholder",
+                          "fill": "$foreground-placeholder",
+                          "content": "Enter your password",
+                          "fontFamily": "Inter",
+                          "fontSize": 15,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "icon_font",
+                          "id": "0kgAo",
+                          "name": "eyeIcon",
+                          "width": 18,
+                          "height": 18,
+                          "iconFontName": "eye",
+                          "iconFontFamily": "lucide",
+                          "fill": "$foreground-muted"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "72d2p",
+                  "name": "forgotPw",
+                  "fill": "$foreground-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Forgot password?",
+                  "textAlign": "right",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "rkmRD",
+              "name": "signInBtn",
+              "width": "fill_container",
+              "height": 52,
+              "fill": "$accent-primary",
+              "cornerRadius": "$rounded-full",
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "202mq",
+                  "name": "signInText",
+                  "fill": "$foreground-inverse",
+                  "content": "Sign In",
+                  "fontFamily": "Inter",
+                  "fontSize": 16,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "VeOES",
+              "name": "dividerRow",
+              "width": "fill_container",
+              "gap": 12,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "cK6Pv",
+                  "name": "divLine1",
+                  "width": "fill_container",
+                  "height": 1,
+                  "fill": "$input-border"
+                },
+                {
+                  "type": "text",
+                  "id": "0oQV3",
+                  "name": "orText",
+                  "fill": "$foreground-muted",
+                  "content": "or",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "pssH3",
+                  "name": "divLine2",
+                  "width": "fill_container",
+                  "height": 1,
+                  "fill": "$input-border"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "MJCPh",
+              "name": "signUpBtn",
+              "width": "fill_container",
+              "height": 52,
+              "fill": "$surface-secondary",
+              "cornerRadius": "$rounded-full",
+              "stroke": {
+                "align": "center",
+                "thickness": 1,
+                "fill": "$input-border"
+              },
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "BnXQF",
+                  "name": "signUpText",
+                  "fill": "$foreground-primary",
+                  "content": "Create an account",
+                  "fontFamily": "Inter",
+                  "fontSize": 16,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "2rYhp",
+              "name": "footer",
+              "width": "fill_container",
+              "gap": 4,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "zHb4O",
+                  "name": "footerText",
+                  "fill": "$foreground-muted",
+                  "content": "By signing in, you agree to our",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "G8pbC",
+                  "name": "footerLink",
+                  "fill": "$foreground-secondary",
+                  "content": "Terms & Privacy Policy",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "600"
                 }
               ]
             }

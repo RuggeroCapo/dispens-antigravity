@@ -1,12 +1,12 @@
 import 'dart:convert';
-import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:path_provider/path_provider.dart';
+import '../services/auth_service.dart';
 import '../services/preferences_service.dart';
 import '../services/notification_service.dart';
-import '../repositories/food_repository.dart';
+import '../repositories/firebase_food_repository.dart';
 import '../theme/app_theme.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -18,138 +18,163 @@ class SettingsScreen extends ConsumerWidget {
     final notificationTime = prefs.notificationTime;
     final timeStr =
         '${notificationTime.hour.toString().padLeft(2, '0')}:${notificationTime.minute.toString().padLeft(2, '0')}';
+    final authService = ref.watch(authServiceProvider);
+    final user = authService.currentUser;
+    final inviteCodeAsync = ref.watch(inviteCodeProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Settings'),
+        title: const Text('Impostazioni'),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 60),
         children: [
 
-          // ── Notifications ──
-          _SectionHeader(label: 'Notifications'),
+          // ── Account ──
+          _SectionHeader(label: 'Account'),
           _SettingsCard(children: [
-            _SettingsRowSwitch(
-              icon: Icons.notifications_outlined,
-              label: 'Push Notifications',
-              value: true, // placeholder – always on if permission granted
-              onToggle: (_) async {
-                final svc = await ref.read(notificationServiceProvider.future);
-                await svc.requestPermissions();
-              },
+            _SettingsRowNavigate(
+              icon: Icons.person_outline_rounded,
+              label: 'Email',
+              value: user?.email ?? 'Non connesso',
+              onTap: () {},
+              showChevron: false,
             ),
             const _Divider(),
             _SettingsRowNavigate(
-              icon: Icons.schedule_outlined,
-              label: 'Daily Notification Time',
-              value: timeStr,
-              onTap: () async {
-                final selected = await showTimePicker(
-                  context: context,
-                  initialTime: notificationTime,
-                  builder: (ctx, child) => Theme(
-                    data: Theme.of(ctx).copyWith(
-                      colorScheme: const ColorScheme.light(
-                        primary: AppColors.primary,
-                      ),
-                    ),
-                    child: child!,
+              icon: Icons.people_outline_rounded,
+              label: 'Gruppo domestico',
+              onTap: () => _showHouseholdInfo(context, ref),
+              valueWidget: inviteCodeAsync.when(
+                data: (code) => Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.safeBg,
+                    borderRadius: BorderRadius.circular(20),
                   ),
-                );
-                if (selected != null) {
-                  await prefs.setNotificationTime(selected);
-                }
-              },
+                  child: Text(code ?? 'Connesso',
+                      style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.2,
+                          color: AppColors.safe)),
+                ),
+                loading: () => const SizedBox(
+                    width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+                error: (error, _) =>
+                    const Text('Errore', style: TextStyle(color: AppColors.urgent)),
+              ),
             ),
             const _Divider(),
             _SettingsRowNavigate(
-              icon: Icons.verified_user_outlined,
-              label: 'Permission Status',
-              onTap: () async {
-                final svc = await ref.read(notificationServiceProvider.future);
-                final granted = await svc.requestPermissions();
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text(granted
-                        ? '✓ Notifications allowed'
-                        : '✗ Permission denied'),
-                  ));
-                }
-              },
-              valueWidget: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppColors.success.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Text('Active',
-                    style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.success)),
-              ),
+              icon: Icons.logout_rounded,
+              label: 'Disconnetti',
+              onTap: () => _confirmSignOut(context, ref),
             ),
           ]),
           const SizedBox(height: 24),
 
+          // ── Notifications (only on native) ──
+          if (!kIsWeb) ...[
+            _SectionHeader(label: 'Notifiche'),
+            _SettingsCard(children: [
+              _SettingsRowSwitch(
+                icon: Icons.notifications_outlined,
+                label: 'Notifiche push',
+                value: true,
+                onToggle: (_) async {
+                  final svc =
+                      await ref.read(notificationServiceProvider.future);
+                  await svc.requestPermissions();
+                },
+              ),
+              const _Divider(),
+              _SettingsRowNavigate(
+                icon: Icons.schedule_outlined,
+                label: 'Ora della notifica giornaliera',
+                value: timeStr,
+                onTap: () async {
+                  final selected = await showTimePicker(
+                    context: context,
+                    initialTime: notificationTime,
+                    builder: (ctx, child) => Theme(
+                      data: Theme.of(ctx).copyWith(
+                        colorScheme: const ColorScheme.light(
+                          primary: AppColors.primary,
+                        ),
+                      ),
+                      child: child!,
+                    ),
+                  );
+                  if (selected != null) {
+                    await prefs.setNotificationTime(selected);
+                  }
+                },
+              ),
+              const _Divider(),
+              _SettingsRowNavigate(
+                icon: Icons.verified_user_outlined,
+                label: 'Stato autorizzazioni',
+                onTap: () async {
+                  final svc =
+                      await ref.read(notificationServiceProvider.future);
+                  final granted = await svc.requestPermissions();
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text(granted
+                          ? 'Notifiche consentite'
+                          : 'Autorizzazione negata'),
+                    ));
+                  }
+                },
+                valueWidget: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.success.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Text('Attive',
+                      style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.success)),
+                ),
+              ),
+            ]),
+            const SizedBox(height: 24),
+          ],
+
           // ── Appearance ──
-          _SectionHeader(label: 'Appearance'),
+          _SectionHeader(label: 'Aspetto'),
           _SettingsCard(children: [
             _SettingsRowNavigate(
               icon: Icons.palette_outlined,
-              label: 'Theme',
-              value: 'System Default',
+              label: 'Tema',
+              value: 'Predefinito di sistema',
               onTap: () {},
             ),
           ]),
           const SizedBox(height: 24),
 
           // ── Data ──
-          _SectionHeader(label: 'Data'),
+          _SectionHeader(label: 'Dati'),
           _SettingsCard(children: [
             _SettingsRowNavigate(
               icon: Icons.upload_outlined,
-              label: 'Export Data',
-              onTap: () async {
-                try {
-                  final repo =
-                      await ref.read(asyncFoodRepositoryProvider.future);
-                  final items = await repo.getItems();
-                  final json = jsonEncode(items.map((e) => e.toJson()).toList());
-                  final dir = await getTemporaryDirectory();
-                  final file = File('${dir.path}/dispens_backup.json');
-                  await file.writeAsString(json);
-                  // ignore: deprecated_member_use
-                  await Share.shareXFiles([XFile(file.path)],
-                      text: 'Dispens Backup');
-                } catch (e) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Export failed: $e')));
-                  }
-                }
-              },
-            ),
-            const _Divider(),
-            _SettingsRowNavigate(
-              icon: Icons.download_outlined,
-              label: 'Import Data',
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text('Import coming soon')));
-              },
+              label: 'Esporta dati',
+              onTap: () => _exportData(context, ref),
             ),
           ]),
           const SizedBox(height: 24),
 
           // ── About ──
-          _SectionHeader(label: 'About'),
+          _SectionHeader(label: 'Informazioni'),
           _SettingsCard(children: [
             _SettingsRowNavigate(
               icon: Icons.info_outline_rounded,
-              label: 'Version',
+              label: 'Versione',
               value: '1.0.0',
               onTap: () {},
               showChevron: false,
@@ -158,7 +183,7 @@ class SettingsScreen extends ConsumerWidget {
           const SizedBox(height: 12),
           const Center(
             child: Text(
-              'Dispens — Your household food inventory manager',
+              'Dispens — Il gestore della dispensa della tua casa',
               style: TextStyle(fontSize: 12, color: AppColors.textTertiary),
               textAlign: TextAlign.center,
             ),
@@ -166,6 +191,141 @@ class SettingsScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _showHouseholdInfo(BuildContext context, WidgetRef ref) async {
+    final code = await ref.read(inviteCodeProvider.future);
+    if (!context.mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Gruppo domestico'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Condividi questo codice invito per aggiungere qualcuno al tuo gruppo domestico:',
+              style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 16),
+            if (code != null)
+              Container(
+                width: double.infinity,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(14),
+                  border:
+                      Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      code,
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                        letterSpacing: 4,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    IconButton(
+                      icon: const Icon(Icons.copy_rounded, size: 20),
+                      color: AppColors.primary,
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(text: code));
+                        ScaffoldMessenger.of(ctx).showSnackBar(
+                          const SnackBar(content: Text('Codice copiato!')),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              )
+            else
+              const Text('Nessun codice invito trovato.',
+                  style: TextStyle(color: AppColors.textSecondary)),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Chiudi'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _confirmSignOut(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Disconnetti'),
+        content: const Text('Vuoi davvero disconnetterti?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Annulla'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.urgent,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text('Disconnetti'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      ref.read(authServiceProvider).signOut();
+    }
+  }
+
+  Future<void> _exportData(BuildContext context, WidgetRef ref) async {
+    try {
+      final repo = ref.read(firebaseFoodRepositoryProvider);
+      if (repo == null) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Nessun gruppo domestico collegato')),
+          );
+        }
+        return;
+      }
+      final items = await repo.getItems();
+      final json = jsonEncode(items.map((e) => e.toJson()).toList());
+
+      // Copy to clipboard as a simple cross-platform export
+      await Clipboard.setData(ClipboardData(text: json));
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${items.length} alimenti copiati negli appunti in formato JSON'),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Esportazione non riuscita: $e')),
+        );
+      }
+    }
   }
 }
 

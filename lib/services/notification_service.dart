@@ -1,13 +1,15 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
-import 'package:flutter_timezone/flutter_timezone.dart';
-import 'dart:io';
 import '../models/food_item.dart';
 import 'preferences_service.dart';
+import 'timezone_helper.dart'
+    if (dart.library.html) 'timezone_helper_web.dart' as tz_helper;
 
-final notificationServiceProvider = FutureProvider<NotificationService>((ref) async {
+final notificationServiceProvider =
+    FutureProvider<NotificationService>((ref) async {
   final prefs = ref.watch(preferencesServiceProvider);
   final service = NotificationService(prefs);
   await service.init();
@@ -16,25 +18,30 @@ final notificationServiceProvider = FutureProvider<NotificationService>((ref) as
 
 class NotificationService {
   final PreferencesService _prefs;
-  final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _plugin =
+      FlutterLocalNotificationsPlugin();
 
   NotificationService(this._prefs);
 
   Future<void> init() async {
+    if (kIsWeb) return;
+
     tz.initializeTimeZones();
-    final tzName = await FlutterTimezone.getLocalTimezone();
-    tz.setLocalLocation(tz.getLocation(tzName.toString()));
+    final tzName = await tz_helper.getLocalTimezoneName();
+    tz.setLocalLocation(tz.getLocation(tzName));
 
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
-    
+
     final DarwinInitializationSettings initializationSettingsDarwin =
         DarwinInitializationSettings(
-            requestAlertPermission: false,
-            requestBadgePermission: false,
-            requestSoundPermission: false);
-            
-    final InitializationSettings initializationSettings = InitializationSettings(
+      requestAlertPermission: false,
+      requestBadgePermission: false,
+      requestSoundPermission: false,
+    );
+
+    final InitializationSettings initializationSettings =
+        InitializationSettings(
       android: initializationSettingsAndroid,
       iOS: initializationSettingsDarwin,
     );
@@ -42,25 +49,30 @@ class NotificationService {
   }
 
   Future<bool> requestPermissions() async {
-    if (Platform.isIOS) {
-      final bool? result = await _plugin
-          .resolvePlatformSpecificImplementation<
-              IOSFlutterLocalNotificationsPlugin>()
-          ?.requestPermissions(
-            alert: true,
-            badge: true,
-            sound: true,
-          );
-      return result ?? false;
-    } else if (Platform.isAndroid) {
-      final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
-          _plugin.resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>();
-      if (androidImplementation != null) {
-        final bool? result = await androidImplementation.requestNotificationsPermission();
-        await androidImplementation.requestExactAlarmsPermission();
+    if (kIsWeb) return false;
+
+    try {
+      final androidImpl = _plugin.resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>();
+      if (androidImpl != null) {
+        final bool? result =
+            await androidImpl.requestNotificationsPermission();
+        await androidImpl.requestExactAlarmsPermission();
         return result ?? false;
       }
+
+      final iosImpl = _plugin.resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin>();
+      if (iosImpl != null) {
+        final bool? result = await iosImpl.requestPermissions(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
+        return result ?? false;
+      }
+    } catch (e) {
+      // Platform not supported
     }
     return false;
   }
@@ -70,10 +82,11 @@ class NotificationService {
   }
 
   Future<void> scheduleFoodNotifications(FoodItem item) async {
+    if (kIsWeb) return;
     await cancelNotifications(item);
 
     final notificationTime = _prefs.notificationTime;
-    
+
     for (int daysBefore in item.reminders) {
       var notifyDate = item.expiryDate.subtract(Duration(days: daysBefore));
       var scheduledDate = DateTime(
@@ -87,14 +100,17 @@ class NotificationService {
       if (scheduledDate.isBefore(DateTime.now())) continue;
 
       int id = _generateIdForNotification(item.id, daysBefore);
-      String title = daysBefore == 0 ? "Scadenza in arrivo!" : "Scadenza vicina per ${item.name}";
-      String body = daysBefore == 0 
+      String title = daysBefore == 0
+          ? "Scadenza in arrivo!"
+          : "Scadenza vicina per ${item.name}";
+      String body = daysBefore == 0
           ? "${item.name} scade oggi (${item.expiryType.label.toLowerCase()})"
           : "${item.name} scade tra $daysBefore giorni";
 
-      tz.TZDateTime scheduledTZDate = tz.TZDateTime.from(scheduledDate, tz.local);
+      tz.TZDateTime scheduledTZDate =
+          tz.TZDateTime.from(scheduledDate, tz.local);
 
-      const AndroidNotificationDetails androidPlatformChannelSpecifics =
+      const AndroidNotificationDetails androidDetails =
           AndroidNotificationDetails(
         'dispens_expiries',
         'Scadenze alimenti',
@@ -102,9 +118,9 @@ class NotificationService {
         importance: Importance.max,
         priority: Priority.high,
       );
-      
-      const NotificationDetails platformChannelSpecifics = NotificationDetails(
-        android: androidPlatformChannelSpecifics,
+
+      const NotificationDetails notifDetails = NotificationDetails(
+        android: androidDetails,
         iOS: DarwinNotificationDetails(),
       );
 
@@ -113,13 +129,14 @@ class NotificationService {
         title: title,
         body: body,
         scheduledDate: scheduledTZDate,
-        notificationDetails: platformChannelSpecifics,
+        notificationDetails: notifDetails,
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       );
     }
   }
 
   Future<void> cancelNotifications(FoodItem item) async {
+    if (kIsWeb) return;
     for (final days in item.reminders) {
       int id = _generateIdForNotification(item.id, days);
       await _plugin.cancel(id: id);

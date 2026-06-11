@@ -16,7 +16,7 @@ class AlertsScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Alerts'),
+        title: const Text('Avvisi'),
         actions: [
           foodAsync.whenOrNull(
             data: (items) {
@@ -32,7 +32,7 @@ class AlertsScreen extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      '${upcoming.length} upcoming',
+                      '${upcoming.length} in arrivo',
                       style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -55,7 +55,7 @@ class AlertsScreen extends ConsumerWidget {
           ),
         ),
         error: (e, _) => Center(
-          child: Text('Error: $e',
+          child: Text('Errore: $e',
               style: const TextStyle(color: AppColors.urgent)),
         ),
       ),
@@ -103,22 +103,22 @@ class AlertsScreen extends ConsumerWidget {
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
       children: [
         if (expired.isNotEmpty) ...[
-          _SectionHeader(label: 'Expired'),
+          _SectionHeader(label: 'Scaduti'),
           ...expired.map((i) => _AlertCard(item: i, urgency: _Urgency.expired)),
           const SizedBox(height: 8),
         ],
         if (todayItems.isNotEmpty) ...[
-          _SectionHeader(label: 'Today'),
+          _SectionHeader(label: 'Oggi'),
           ...todayItems.map((i) => _AlertCard(item: i, urgency: _Urgency.today)),
           const SizedBox(height: 8),
         ],
         if (thisWeek.isNotEmpty) ...[
-          _SectionHeader(label: 'This Week'),
+          _SectionHeader(label: 'Questa settimana'),
           ...thisWeek.map((i) => _AlertCard(item: i, urgency: _Urgency.thisWeek)),
           const SizedBox(height: 8),
         ],
         if (later.isNotEmpty) ...[
-          _SectionHeader(label: 'Later'),
+          _SectionHeader(label: 'Più avanti'),
           ...later.map((i) => _AlertCard(item: i, urgency: _Urgency.later)),
           const SizedBox(height: 8),
         ],
@@ -136,7 +136,7 @@ class AlertsScreen extends ConsumerWidget {
               const SizedBox(width: 10),
               const Expanded(
                 child: Text(
-                  'Alerts are sent daily at 09:00 AM. Change this in Settings.',
+                  'Gli avvisi vengono inviati ogni giorno alle 09:00. Puoi modificarlo nelle impostazioni.',
                   style: TextStyle(
                     fontSize: 12,
                     color: Color(0xFF4A7FA5),
@@ -167,13 +167,13 @@ class AlertsScreen extends ConsumerWidget {
                   size: 48, color: AppColors.textTertiary),
             ),
             const SizedBox(height: 20),
-            const Text('No alerts',
+            const Text('Nessun avviso',
                 style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
                     color: AppColors.textPrimary)),
             const SizedBox(height: 8),
-            const Text('All your items are safely within date.',
+            const Text('Tutti i tuoi alimenti rientrano ancora nella data di consumo.',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 14, color: AppColors.textSecondary)),
           ],
@@ -227,25 +227,25 @@ class _AlertCard extends StatelessWidget {
         iconColor = AppColors.urgent;
         iconData = Icons.warning_rounded;
         subtitle =
-            'Expired ${daysLeft.abs()} day${daysLeft.abs() != 1 ? 's' : ''} ago · ${item.expiryType.shortLabel}';
+            'Scaduto da ${daysLeft.abs()} giorn${daysLeft.abs() == 1 ? 'o' : 'i'} · ${item.expiryType.shortLabel}';
       case _Urgency.today:
         iconBg = AppColors.urgentBg;
         iconColor = AppColors.urgent;
         iconData = Icons.warning_amber_rounded;
-        subtitle = 'Expires today · ${item.expiryType.shortLabel}';
+        subtitle = 'Scade oggi · ${item.expiryType.shortLabel}';
       case _Urgency.thisWeek:
         iconBg = AppColors.warningBg;
         iconColor = AppColors.warning;
         iconData = Icons.notifications_outlined;
         subtitle =
-            'Expires in $daysLeft day${daysLeft != 1 ? 's' : ''} · ${item.expiryType.shortLabel}';
-        dateStr = DateFormat('MMM d').format(item.expiryDate);
+            'Scade tra $daysLeft giorn${daysLeft == 1 ? 'o' : 'i'} · ${item.expiryType.shortLabel}';
+        dateStr = DateFormat('dd MMM', 'it').format(item.expiryDate);
       case _Urgency.later:
         iconBg = AppColors.chipBg;
         iconColor = AppColors.textSecondary;
         iconData = Icons.notifications_none_outlined;
         subtitle = item.expiryType.shortLabel;
-        dateStr = DateFormat('MMM d').format(item.expiryDate);
+        dateStr = DateFormat('dd MMM', 'it').format(item.expiryDate);
     }
 
     return GestureDetector(

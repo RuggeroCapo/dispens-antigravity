@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import '../services/ai_service.dart';
 import '../providers/food_provider.dart';
 import '../models/food_item.dart';
 import '../theme/app_theme.dart';
@@ -22,9 +24,11 @@ class _AddEditFoodScreenState extends ConsumerState<AddEditFoodScreen> {
   ExpiryType _expiryType = ExpiryType.strict;
   List<String> _tags = [];
   List<int> _reminders = [1];
+  
+  bool _isScanning = false;
 
   static const _predefinedTags = [
-    'Dairy', 'Meat', 'Vegetables', 'Fruits', 'Frozen', 'Refrigerated',
+    'Latticini', 'Carne', 'Verdure', 'Frutta', 'Surgelati', 'Refrigerati',
   ];
 
   @override
@@ -98,6 +102,60 @@ class _AddEditFoodScreenState extends ConsumerState<AddEditFoodScreen> {
     }
   }
 
+  Future<void> _pickImageAndScan() async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt, color: AppColors.primary),
+              title: const Text('Scatta foto', style: TextStyle(color: AppColors.textPrimary)),
+              onTap: () => Navigator.pop(ctx, ImageSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library, color: AppColors.primary),
+              title: const Text('Scegli dalla galleria', style: TextStyle(color: AppColors.textPrimary)),
+              onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (source == null) return;
+
+    final picker = ImagePicker();
+    try {
+      final XFile? image = await picker.pickImage(source: source);
+      if (image == null) return;
+      
+      setState(() => _isScanning = true);
+      
+      final result = await AiService.extractFoodInfo(image);
+      if (result != null) {
+        setState(() {
+          if (result.name.isNotEmpty) _nameCtrl.text = result.name;
+          if (result.description.isNotEmpty) _descCtrl.text = result.description;
+          if (result.expirationDate != null) _expiryDate = result.expirationDate!;
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Dati estratti con successo!')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString()), backgroundColor: AppColors.urgent),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isScanning = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.foodItem != null;
@@ -109,12 +167,12 @@ class _AddEditFoodScreenState extends ConsumerState<AddEditFoodScreen> {
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text(isEditing ? 'Edit Item' : 'Add Item'),
+        title: Text(isEditing ? 'Modifica alimento' : 'Aggiungi alimento'),
         actions: [
           TextButton(
             onPressed: _save,
             child: Text(
-              'Save',
+              'Salva',
               style: const TextStyle(
                 color: AppColors.primary,
                 fontWeight: FontWeight.w700,
@@ -131,26 +189,82 @@ class _AddEditFoodScreenState extends ConsumerState<AddEditFoodScreen> {
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
           children: [
 
+            // ── AI Scanner ──
+            if (!isEditing) ...[
+              InkWell(
+                onTap: _isScanning ? null : _pickImageAndScan,
+                borderRadius: BorderRadius.circular(16),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF8A2387), Color(0xFFE94057), Color(0xFFF27121)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Row(
+                    children: [
+                      _isScanning
+                          ? const SizedBox(
+                              width: 28,
+                              height: 28,
+                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                            )
+                          : const Icon(Icons.auto_awesome, color: Colors.white, size: 28),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _isScanning ? 'Analisi in corso...' : 'Scansiona etichetta con IA',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            if (!_isScanning)
+                              const Text(
+                                'Compila in automatico con una foto',
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 13,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+            ],
+
             // ── Name ──
             _FormSection(
-              label: 'Name *',
+              label: 'Nome *',
               child: TextFormField(
                 controller: _nameCtrl,
-                decoration: const InputDecoration(hintText: 'Enter food name'),
+                decoration:
+                    const InputDecoration(hintText: 'Inserisci il nome dell\'alimento'),
                 textCapitalization: TextCapitalization.sentences,
                 validator: (v) =>
-                    v == null || v.trim().isEmpty ? 'Name is required' : null,
+                    v == null || v.trim().isEmpty ? 'Il nome è obbligatorio' : null,
               ),
             ),
             const SizedBox(height: 16),
 
             // ── Description ──
             _FormSection(
-              label: 'Description',
+              label: 'Descrizione',
               child: TextFormField(
                 controller: _descCtrl,
                 decoration:
-                    const InputDecoration(hintText: 'Optional description…'),
+                    const InputDecoration(hintText: 'Descrizione facoltativa...'),
                 maxLines: 2,
                 textCapitalization: TextCapitalization.sentences,
               ),
@@ -159,7 +273,7 @@ class _AddEditFoodScreenState extends ConsumerState<AddEditFoodScreen> {
 
             // ── Expiration Date ──
             _FormSection(
-              label: 'Expiration Date',
+              label: 'Data di scadenza',
               child: InkWell(
                 onTap: _pickDate,
                 borderRadius: BorderRadius.circular(12),
@@ -169,7 +283,7 @@ class _AddEditFoodScreenState extends ConsumerState<AddEditFoodScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        DateFormat('MMM dd, yyyy').format(_expiryDate),
+                        DateFormat('dd MMM yyyy', 'it').format(_expiryDate),
                         style: const TextStyle(
                             fontSize: 15, color: AppColors.textPrimary),
                       ),
@@ -184,7 +298,7 @@ class _AddEditFoodScreenState extends ConsumerState<AddEditFoodScreen> {
 
             // ── Expiration Type ──
             _FormSection(
-              label: 'Expiration Type',
+              label: 'Tipo di scadenza',
               child: _SegmentedToggle(
                 options: ExpiryType.values.map((e) => e.label).toList(),
                 selectedIndex: ExpiryType.values.indexOf(_expiryType),
@@ -196,7 +310,7 @@ class _AddEditFoodScreenState extends ConsumerState<AddEditFoodScreen> {
 
             // ── Tags ──
             _FormSection(
-              label: 'Tags',
+              label: 'Tag',
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -224,7 +338,7 @@ class _AddEditFoodScreenState extends ConsumerState<AddEditFoodScreen> {
                         child: TextField(
                           controller: _tagCtrl,
                           decoration: const InputDecoration(
-                            hintText: '+ New Tag',
+                            hintText: '+ Nuovo tag',
                             isDense: true,
                           ),
                           onSubmitted: _addTag,
@@ -263,14 +377,16 @@ class _AddEditFoodScreenState extends ConsumerState<AddEditFoodScreen> {
 
             // ── Reminders ──
             _FormSection(
-              label: 'Reminders',
+              label: 'Promemoria',
               child: Wrap(
                 spacing: 8,
                 runSpacing: 8,
                 children: [0, 1, 2, 3, 5, 7].map((d) {
                   final selected = _reminders.contains(d);
                   return _ToggleTagChip(
-                    label: d == 0 ? 'Same day' : '$d day${d > 1 ? 's' : ''} before',
+                    label: d == 0
+                        ? 'Lo stesso giorno'
+                        : '$d giorn${d == 1 ? 'o' : 'i'} prima',
                     selected: selected,
                     onTap: () => setState(() {
                       selected ? _reminders.remove(d) : _reminders.add(d);
@@ -291,7 +407,7 @@ class _AddEditFoodScreenState extends ConsumerState<AddEditFoodScreen> {
                     borderRadius: BorderRadius.circular(14)),
               ),
               child: Text(
-                isEditing ? 'Save Changes' : 'Add to Pantry',
+                isEditing ? 'Salva modifiche' : 'Aggiungi alla dispensa',
                 style: const TextStyle(
                     fontSize: 16, fontWeight: FontWeight.w600),
               ),

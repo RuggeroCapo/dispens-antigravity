@@ -1,15 +1,25 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'firebase_options.dart';
+import 'services/auth_service.dart';
 import 'services/preferences_service.dart';
 import 'services/notification_service.dart';
 import 'theme/app_theme.dart';
+import 'screens/auth_screen.dart';
+import 'screens/household_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/alerts_screen.dart';
 import 'screens/settings_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   final prefs = await SharedPreferences.getInstance();
   runApp(
     ProviderScope(
@@ -29,7 +39,10 @@ class _DispensAppState extends ConsumerState<DispensApp> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _requestPermissions());
+    if (!kIsWeb) {
+      WidgetsBinding.instance
+          .addPostFrameCallback((_) => _requestPermissions());
+    }
   }
 
   Future<void> _requestPermissions() async {
@@ -45,7 +58,77 @@ class _DispensAppState extends ConsumerState<DispensApp> {
       title: 'Dispens',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
-      home: const MainShell(),
+      locale: const Locale('it'),
+      supportedLocales: const [Locale('it')],
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
+      home: const AuthGate(),
+    );
+  }
+}
+
+// ───────────────────────────────────────────────
+//  Auth gate — routes to the correct screen
+// ───────────────────────────────────────────────
+class AuthGate extends ConsumerWidget {
+  const AuthGate({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authStateProvider);
+
+    return authState.when(
+      data: (user) {
+        if (user == null) return const AuthScreen();
+
+        // User is logged in — check if they have a household
+        final householdAsync = ref.watch(householdIdProvider);
+        return householdAsync.when(
+          data: (householdId) {
+            if (householdId == null) return const HouseholdScreen();
+            return const MainShell();
+          },
+          loading: () => const _SplashLoader(),
+          error: (error, _) => const HouseholdScreen(),
+        );
+      },
+      loading: () => const _SplashLoader(),
+      error: (error, _) => const AuthScreen(),
+    );
+  }
+}
+
+class _SplashLoader extends StatelessWidget {
+  const _SplashLoader();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: const Icon(
+                Icons.kitchen_rounded,
+                size: 40,
+                color: AppColors.primary,
+              ),
+            ),
+            const SizedBox(height: 24),
+            const CircularProgressIndicator(
+              color: AppColors.primary,
+              strokeWidth: 2,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -112,14 +195,14 @@ class _FadeIndexedStackState extends State<_FadeIndexedStack>
     );
 
     _slide = Tween<Offset>(
-      begin: const Offset(0, 0.012),   // very subtle — ~8px on a 700px screen
+      begin: const Offset(0, 0.012),
       end: Offset.zero,
     ).animate(CurvedAnimation(
       parent: _controller,
       curve: Curves.easeOutCubic,
     ));
 
-    _controller.value = 1.0; // start fully visible
+    _controller.value = 1.0;
   }
 
   @override
@@ -161,9 +244,9 @@ class _BottomNav extends StatelessWidget {
   const _BottomNav({required this.currentIndex, required this.onTap});
 
   static const _items = [
-    _NavItemData(icon: Icons.home_rounded, label: 'Home'),
-    _NavItemData(icon: Icons.notifications_none_rounded, label: 'Alerts'),
-    _NavItemData(icon: Icons.settings_rounded, label: 'Settings'),
+    _NavItemData(icon: Icons.home_rounded, label: 'Dispensa'),
+    _NavItemData(icon: Icons.notifications_none_rounded, label: 'Avvisi'),
+    _NavItemData(icon: Icons.settings_rounded, label: 'Impostazioni'),
   ];
 
   @override

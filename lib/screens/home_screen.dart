@@ -53,7 +53,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       color: AppColors.textPrimary,
                     ),
                     decoration: InputDecoration(
-                      hintText: 'Search items…',
+                      hintText: 'Cerca alimenti...',
                       prefixIcon: const Icon(Icons.search_rounded, size: 22),
                       suffixIcon: IconButton(
                         icon: const Icon(Icons.close_rounded, size: 22),
@@ -69,7 +69,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     onChanged: (v) =>
                         ref.read(sortFilterProvider.notifier).setSearchQuery(v),
                   )
-                : const Text('My Pantry'),
+                : const Text('La mia dispensa'),
             actions: [
               if (!_searchOpen)
                 IconButton(
@@ -130,7 +130,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
               error: (e, _) => SliverFillRemaining(
                 child: Center(
-                  child: Text('Error: $e',
+                  child: Text('Errore: $e',
                       style: const TextStyle(color: AppColors.urgent)),
                 ),
               ),
@@ -188,7 +188,7 @@ class _FoodItemCard extends ConsumerWidget {
         ref.read(foodListProvider.notifier).deleteItem(item);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${item.name} removed'),
+            content: Text('${item.name} rimosso'),
             action: SnackBarAction(
               label: 'OK',
               textColor: AppColors.primaryLight,
@@ -280,7 +280,7 @@ class _ExpiryBadge extends StatelessWidget {
     Color bg;
     Color text;
     IconData? icon;
-    String dateStr = DateFormat('MMM dd').format(item.expiryDate);
+    final dateStr = DateFormat('dd MMM', 'it').format(item.expiryDate);
 
     final isExpired = daysToExpiry < 0;
     final isCritical = daysToExpiry >= 0 && daysToExpiry <= 2 || isExpired;
@@ -302,13 +302,13 @@ class _ExpiryBadge extends StatelessWidget {
 
     String textContent;
     if (isExpired) {
-      textContent = 'Expired · $dateStr';
+      textContent = 'Scaduto · $dateStr';
     } else if (daysToExpiry == 0) {
-      textContent = 'Expires today · $dateStr';
+      textContent = 'Scade oggi · $dateStr';
     } else if (daysToExpiry == 1) {
-      textContent = 'Expires tomorrow · $dateStr';
+      textContent = 'Scade domani · $dateStr';
     } else {
-      textContent = '$daysToExpiry days left · $dateStr';
+      textContent = '$daysToExpiry giorni rimasti · $dateStr';
     }
 
     return Container(
@@ -399,7 +399,9 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             Text(
-              hasFilters ? 'No items match your filters' : 'Your pantry is empty',
+              hasFilters
+                  ? 'Nessun alimento corrisponde ai filtri'
+                  : 'La tua dispensa è vuota',
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
@@ -409,8 +411,8 @@ class _EmptyState extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               hasFilters
-                  ? 'Try adjusting or clearing your filters.'
-                  : 'Tap + to add your first food item.',
+                  ? 'Prova a modificare o ad azzerare i filtri.'
+                  : 'Tocca + per aggiungere il tuo primo alimento.',
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontSize: 14,

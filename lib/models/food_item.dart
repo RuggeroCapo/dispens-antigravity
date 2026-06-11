@@ -10,18 +10,18 @@ extension ExpiryTypeExtension on ExpiryType {
   String get label {
     switch (this) {
       case ExpiryType.strict:
-        return 'Use By';
+        return 'Da consumarsi entro';
       case ExpiryType.bestBefore:
-        return 'Best Before';
+        return 'Da consumarsi preferibilmente entro';
     }
   }
 
   String get shortLabel {
     switch (this) {
       case ExpiryType.strict:
-        return 'Use by';
+        return 'Da consumarsi entro';
       case ExpiryType.bestBefore:
-        return 'Best before';
+        return 'Preferibilmente entro';
     }
   }
 }

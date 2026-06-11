@@ -41,6 +41,7 @@ class AppTheme {
 
   static ThemeData get light {
     final base = GoogleFonts.interTextTheme(ThemeData.light().textTheme);
+    final playfair = GoogleFonts.playfairDisplayTextTheme(ThemeData.light().textTheme);
     return ThemeData(
       useMaterial3: true,
       scaffoldBackgroundColor: AppColors.background,
@@ -52,9 +53,12 @@ class AppTheme {
         error: AppColors.urgent,
       ),
       textTheme: base.copyWith(
-        headlineLarge: base.headlineLarge?.copyWith(color: AppColors.textPrimary, fontWeight: FontWeight.w700),
-        titleLarge: base.titleLarge?.copyWith(color: AppColors.textPrimary, fontWeight: FontWeight.w700),
-        titleMedium: base.titleMedium?.copyWith(color: AppColors.textPrimary, fontWeight: FontWeight.w600),
+        headlineLarge: playfair.headlineLarge?.copyWith(color: AppColors.textPrimary, fontWeight: FontWeight.w700),
+        headlineMedium: playfair.headlineMedium?.copyWith(color: AppColors.textPrimary, fontWeight: FontWeight.w700),
+        headlineSmall: playfair.headlineSmall?.copyWith(color: AppColors.textPrimary, fontWeight: FontWeight.w700),
+        titleLarge: playfair.titleLarge?.copyWith(color: AppColors.textPrimary, fontWeight: FontWeight.w700),
+        titleMedium: playfair.titleMedium?.copyWith(color: AppColors.textPrimary, fontWeight: FontWeight.w600),
+        titleSmall: playfair.titleSmall?.copyWith(color: AppColors.textPrimary, fontWeight: FontWeight.w600),
         bodyLarge: base.bodyLarge?.copyWith(color: AppColors.textPrimary),
         bodyMedium: base.bodyMedium?.copyWith(color: AppColors.textSecondary),
         bodySmall: base.bodySmall?.copyWith(color: AppColors.textSecondary),
@@ -68,7 +72,7 @@ class AppTheme {
         centerTitle: false,
         toolbarHeight: 64,
         titleSpacing: 20,
-        titleTextStyle: GoogleFonts.inter(fontSize: 26, fontWeight: FontWeight.w700, letterSpacing: -0.5, color: AppColors.textPrimary),
+        titleTextStyle: GoogleFonts.playfairDisplay(fontSize: 26, fontWeight: FontWeight.w700, letterSpacing: -0.5, color: AppColors.textPrimary),
         iconTheme: const IconThemeData(color: AppColors.textPrimary),
       ),
       cardTheme: CardThemeData(

@@ -51,7 +51,7 @@ class _SortFilterSheetState extends ConsumerState<SortFilterSheet> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Sort & Filter',
+                      const Text('Ordina e filtra',
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w700,
@@ -67,7 +67,7 @@ class _SortFilterSheetState extends ConsumerState<SortFilterSheet> {
                   const SizedBox(height: 8),
 
                   // ── Sort by ──
-                  _sectionLabel('Sort by'),
+                  _sectionLabel('Ordina per'),
                   const SizedBox(height: 8),
                   _SortRadioGroup(
                     value: sf.sortBy,
@@ -76,13 +76,13 @@ class _SortFilterSheetState extends ConsumerState<SortFilterSheet> {
                   const SizedBox(height: 20),
 
                   // ── Filter by Tags ──
-                  _sectionLabel('Filter by Tags'),
+                  _sectionLabel('Filtra per tag'),
                   const SizedBox(height: 10),
                   if (allTags.isEmpty)
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       child: Text(
-                        'No tags yet — add tags to your items to filter here.',
+                        'Non ci sono ancora tag: aggiungili ai tuoi alimenti per filtrare qui.',
                         style: TextStyle(
                           fontSize: 13,
                           color: AppColors.textSecondary.withValues(alpha: 0.7),
@@ -106,21 +106,21 @@ class _SortFilterSheetState extends ConsumerState<SortFilterSheet> {
                   const SizedBox(height: 20),
 
                   // ── Expiration Range ──
-                  _sectionLabel('Expiration Range'),
+                  _sectionLabel('Intervallo di scadenza'),
                   const SizedBox(height: 10),
                   Row(
                     children: [
                       ..._rangeDays.map((d) => Padding(
                             padding: const EdgeInsets.only(right: 8),
                             child: _FilterChip(
-                              label: '$d days',
+                              label: '$d giorni',
                               selected: sf.expirationRangeDays == d,
                               onTap: () => notifier.setExpirationRange(
                                   sf.expirationRangeDays == d ? null : d),
                             ),
                           )),
                       _FilterChip(
-                        label: 'All',
+                        label: 'Tutti',
                         selected: sf.expirationRangeDays == null,
                         onTap: () => notifier.setExpirationRange(null),
                       ),
@@ -129,12 +129,12 @@ class _SortFilterSheetState extends ConsumerState<SortFilterSheet> {
                   const SizedBox(height: 20),
 
                   // ── Expiration Type ──
-                  _sectionLabel('Expiration Type'),
+                  _sectionLabel('Tipo di scadenza'),
                   const SizedBox(height: 10),
                   Row(
                     children: [
                       _FilterChip(
-                        label: 'Use By',
+                        label: 'Da consumarsi entro',
                         selected: sf.expiryTypeFilter == ExpiryType.strict,
                         onTap: () => notifier.setExpiryTypeFilter(
                           sf.expiryTypeFilter == ExpiryType.strict
@@ -144,7 +144,7 @@ class _SortFilterSheetState extends ConsumerState<SortFilterSheet> {
                       ),
                       const SizedBox(width: 8),
                       _FilterChip(
-                        label: 'Best Before',
+                        label: 'Preferibilmente entro',
                         selected: sf.expiryTypeFilter == ExpiryType.bestBefore,
                         onTap: () => notifier.setExpiryTypeFilter(
                           sf.expiryTypeFilter == ExpiryType.bestBefore
@@ -182,7 +182,7 @@ class _SortFilterSheetState extends ConsumerState<SortFilterSheet> {
                           borderRadius: BorderRadius.circular(12)),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
-                    child: const Text('Clear Filters',
+                    child: const Text('Azzera filtri',
                         style: TextStyle(color: AppColors.textSecondary)),
                   ),
                 ),
@@ -196,7 +196,7 @@ class _SortFilterSheetState extends ConsumerState<SortFilterSheet> {
                           borderRadius: BorderRadius.circular(12)),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
-                    child: const Text('Apply Filters'),
+                    child: const Text('Applica filtri'),
                   ),
                 ),
               ],
@@ -239,9 +239,9 @@ class _SortRadioGroup extends StatelessWidget {
           final i = entry.key;
           final option = entry.value;
           final label = switch (option) {
-            SortOption.expirationDate => 'Expiration Date',
-            SortOption.name => 'Name',
-            SortOption.dateAdded => 'Date Added',
+            SortOption.expirationDate => 'Data di scadenza',
+            SortOption.name => 'Nome',
+            SortOption.dateAdded => 'Data di inserimento',
           };
           return Column(
             children: [
